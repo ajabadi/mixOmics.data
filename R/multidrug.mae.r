@@ -4,6 +4,7 @@
 #'
 #' @name multidrug.mae
 #' @docType data
+#' @import MultiAssayExperiment
 #' @return none
 #' @references Scherf, U., Ross, D. T., Waltham, M., Smith, L. H., Lee, J. K.,
 #' Tanabe, L., Kohn, K. W., Reinhold, W. C., Myers, T. G., Andrews, D. T.,

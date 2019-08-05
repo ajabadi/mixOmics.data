@@ -4,6 +4,7 @@
 #'
 #' @name linnerud.mae
 #' @docType data
+#' @import MultiAssayExperiment
 #' @format A list containing the following components: \describe{
 #' \item{list("exercise")}{data frame with 20 observations on 3 exercise
 #' variables.} \item{list("physiological")}{data frame with 20 observations on

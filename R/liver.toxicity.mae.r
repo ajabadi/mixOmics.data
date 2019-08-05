@@ -2,8 +2,9 @@
 #'
 #' The \code{liver.toxicity} data with \code{MultiAssayExperiment} class.
 #'
-#' @name liver.toxicity
+#' @name liver.toxicity.mae
 #' @docType data
+#' @import MultiAssayExperiment
 #' @return none
 #' @references Bushel, P., Wolfinger, R. D. and Gibson, G. (2007). Simultaneous
 #' clustering of gene expression data with clinical chemistry and pathological

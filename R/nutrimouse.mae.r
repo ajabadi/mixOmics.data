@@ -4,6 +4,7 @@
 #'
 #' @name nutrimouse.mae
 #' @docType data
+#' @import MultiAssayExperiment
 #' @return none
 #' @references Martin, P. G. P., Guillou, H., Lasserre, F., Déjean, S., Lan,
 #' A., Pascussi, J.-M., San Cristobal, M., Legrand, P., Besse, P. and Pineau,
