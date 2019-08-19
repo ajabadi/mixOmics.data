@@ -1,12 +1,18 @@
 Package: mixOmics.data
-Depends: R (>= 3.5.0), MultiAssayExperiment
+Depends: mixOmics
+Imports: MultiAssayExperiment, SummarizedExperiment
 Type: Package
 Title: mixOmics examplar datasets
-Version: 6.8.1
-Author: Al J Abadi, Kim-Anh Lê Cao
+Version: 6.9.2
+Suggests: knitr, rmarkdown
+Author: Al J Abadi, Kim-Anh Lê Cao, Florian Rohart
 Maintainer: Al J Abadi <al.jal.abadi@gmail.com>
+URL: http://www.mixOmics.org
 Description: mixOmics examplar datasets.
 License: GPL (>=2.0)
+BugReports: https://github.com/mixOmicsTeam/mixOmics/issues/
+Repository: Bioconductor
 Encoding: UTF-8
+biocViews: ImmunoOncologyData
 LazyData: true
 RoxygenNote: 6.1.1
