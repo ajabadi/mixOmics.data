@@ -1,6 +1,6 @@
-#'The MultiAssayExperiment format of the \code{srbct} dataset.
+#'The SummarizedExperiment format of the \code{srbct} dataset.
 #'
-#' @name srbct.mae
+#' @name srbct.se
 #' @docType data
 #' @return none
 #' @references Khan et al. (2001). Classification and diagnostic prediction of

@@ -1,6 +1,6 @@
 #' Nutrimouse Dataset
 #'
-#' The MultiAssayExperiment format of the \code{nutrimouse} dataset.
+#' The \code{nutrimouse} dataset in MultiAssayExperiment class.
 #'
 #' @name nutrimouse.mae
 #' @docType data
@@ -15,4 +15,5 @@
 #' Toxicology and Pharmacology Laboratory, National Institute for Agronomic
 #' Research, French.
 #' @keywords datasets
+#' @example ./examples/example-nutrimouse.mae.R
 NULL

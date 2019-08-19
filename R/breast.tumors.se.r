@@ -1,8 +1,8 @@
 #' Human Breast Tumors Data
 #'
-#' The \code{breast.tumors} data with \code{MultiAssayExperiment} class.
+#' The \code{breast.tumors} data with \code{SummarizedExperiment} class.
 #'
-#' @name breast.tumors.mae
+#' @name breast.tumors.se
 #' @docType data
 #' @import MultiAssayExperiment
 #' @return none

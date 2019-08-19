@@ -13,7 +13,16 @@ Research, French.
 none
 }
 \description{
-The MultiAssayExperiment format of the \code{nutrimouse} dataset.
+The \code{nutrimouse} dataset in MultiAssayExperiment class.
+}
+\examples{
+experiments(nutrimouse.mae)
+## same as:
+nutrimouse.mae@ExperimentList
+## sample data
+colData(nutrimouse.mae)
+## sample map
+sampleMap(nutrimouse.mae)
 }
 \references{
 Martin, P. G. P., Guillou, H., Lasserre, F., Déjean, S., Lan,
