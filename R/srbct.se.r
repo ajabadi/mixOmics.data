@@ -2,6 +2,7 @@
 #'
 #' @name srbct.se
 #' @docType data
+#' @import SummarizedExperiment
 #' @return none
 #' @references Khan et al. (2001). Classification and diagnostic prediction of
 #' cancers using gene expression profiling and artificial neural networks.

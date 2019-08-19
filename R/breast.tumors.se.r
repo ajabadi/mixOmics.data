@@ -4,7 +4,7 @@
 #'
 #' @name breast.tumors.se
 #' @docType data
-#' @import MultiAssayExperiment
+#' @import SummarizedExperiment
 #' @return none
 #' @references Perez-Enciso, M. and Tenenhaus, M. (2003). Prediction of
 #' clinical outcome with microarray data: a partial least squares discriminant
