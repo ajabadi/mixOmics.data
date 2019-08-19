@@ -4,7 +4,7 @@ This package contains the datasets from [mixOmics](https://www.bioconductor.org/
 
 The data descriptions can be found in _/man_ older.
 
-Installation:
+## Installation:
 
 ```
 devtools::install_github("ajabadi/mixOmics.data")
