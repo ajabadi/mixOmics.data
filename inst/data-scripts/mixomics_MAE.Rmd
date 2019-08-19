@@ -1,0 +1,663 @@
+---
+title: "mixOmics - MultiAssayExperiment"
+author: "S. Dejean"
+date: "August, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+```{r message=FALSE}
+library(mixOmics)
+library(MultiAssayExperiment)
+library(S4Vectors)
+```
+
+1. convert mixOmics datasets into MultiAssayExperiment objects
+
+2. define generic functions to allow several calls for each method
+
+
+# Convert mixOmics datasets into MultiAssayExperiment objects
+
+From `MultiAssayExperiment` Quick Start Guide available at <http://bioconductor.org/packages/release/bioc/vignettes/MultiAssayExperiment/inst/doc/QuickStartMultiAssay.html>
+
+Components slots of a `MultiAssayExperiment` object:
+
+- `colData`: **information biological units**. A `DataFrame` describing the characteristics of biological units, for example clinical data for patients. In the prepared datasets from The Cancer Genome Atlas, each row is one patient and each column is a clinical, pathological, subtype, or other variable. The `$` function provides a shortcut for accessing or setting `colData` columns.
+
+*Key points:*
+
+    - One row per patient
+
+    - Each row maps to zero or more observations in each experiment in the `ExperimentList`, below.
+
+- `ExperimentList`: **experiment data**. A base `list` or `ExperimentList` object containing the experimental datasets for the set of samples collected. This gets converted into a class `ExperimentList` during construction.
+
+*Key points:*
+
+    - One matrix-like dataset per list element
+    
+    - One matrix column per assayed specimen. Each matrix column must correspond to exactly one row of `colData`: in other words, you must know which patient or cell line the observation came from. However, multiple columns can come from the same patient, or there can be no data for that patient.
+    
+    - **Matrix rows correspond to variables**, e.g. genes or genomic ranges 
+
+That's why we have to transpose our matrices.
+
+- `sampleMap`: **relationship graph**. graph representation of the relationship between biological units and experimental results. **In simple cases where the column names of `ExperimentList` data matrices match the row names of `colData`, the user won't need to specify or think about a sample map** (we are  here with `mixOmics` datasets), it can be created automatically by the `MultiAssayExperiment` constructor. `sampleMap` is a simple three-column `DataFrame`:
+
+    1. `assay` column: the name of the assay, and found in the names of ExperimentList list names
+
+    2. `primary` column: identifiers of patients or biological units, and found in the row names of colData
+
+    3. `colname` column: identifiers of assay results, and found in the column names of `ExperimentList` elements.
+
+*Key points:*
+
+    - relates experimental observations (colnames) to `colData`
+    
+    - permits experiment-specific sample naming, missing, and replicate observations
+
+## Nutrimouse
+
+### Construction
+
+```{r}
+data(nutrimouse)
+# Need to transpose matrices to be stored into experiments slot
+X <- t(nutrimouse$lipid)
+Y <- t(nutrimouse$gene)
+# information biological units for colData component
+info.sample <- DataFrame(diet=nutrimouse$diet, genotype=nutrimouse$genotype)
+rownames(info.sample) <- 1:40 # needed
+
+nutrimouse.mae <- MultiAssayExperiment(
+  experiments = ExperimentList(list(lipid=X, gene=Y)),
+  colData = info.sample) 
+```
+
+### Usage
+
+```{r}
+nutrimouse.mae
+experiments(nutrimouse.mae)
+head(experiments(nutrimouse.mae)[[1]])
+head(experiments(nutrimouse.mae)[["gene"]])
+identical(experiments(nutrimouse.mae)[["gene"]],experiments(nutrimouse.mae)[[2]])
+colData(nutrimouse.mae)
+sampleMap(nutrimouse.mae)
+```
+
+
+## Liver toxicity
+
+### Construction
+
+```{r}
+data(liver.toxicity)
+# Experiments
+X <- t(liver.toxicity$gene)
+Y <- t(liver.toxicity$clinic)
+colnames(Y) <- paste0("ID", colnames(Y))
+# ColData
+info.sample <- DataFrame(liver.toxicity$treatment)
+rownames(info.sample) <- paste0("ID", rownames(info.sample))
+
+livertox.mae <- MultiAssayExperiment(
+  experiments = ExperimentList(list(gene=X, clinic=Y)),
+  colData = info.sample)
+```
+
+### Usage
+
+```{r}
+livertox.mae
+experiments(livertox.mae)
+head(experiments(livertox.mae)[[1]])
+head(experiments(livertox.mae)[["clinic"]])
+colData(livertox.mae)
+sampleMap(livertox.mae)
+```
+
+## SRBCT
+
+### Construction
+
+```{r}
+data(srbct)
+# Experiments
+X <- t(srbct$gene)
+
+coldata <- S4Vectors::DataFrame(class = srbct$class, row.names = colnames(X))
+rowdata <- S4Vectors::DataFrame(srbct$gene.name, stringsAsFactors = FALSE)
+rowdata$Gene.Description <- as.character(rowdata$Gene.Description)
+srbct.se <- SummarizedExperiment(assays = list(srbct = X), rowData = DataFrame(srbct$gene.name),
+                     colData = DataFrame(breast.tumors$sample))
+
+rownames(X) <- srbct$gene.name[,1]
+
+# ColData
+info.sample <- DataFrame(srbct$class)
+rownames(info.sample) <- colnames(X)
+
+srbct.mae <- MultiAssayExperiment(
+                   experiments = ExperimentList(list(gene=X)),
+                   colData = info.sample)
+```
+
+```{r}
+data(breast.tumors)
+# Experiments
+X <- t(breast.tumors$gene.exp)
+colnames(X) <- breast.tumors$sample$name
+rownames(X) <- breast.tumors$genes$name
+breast.tumors.se <- SummarizedExperiment(assays = list(breast.tumors = X), rowData = DataFrame(breast.tumors$genes),
+                     colData = DataFrame(breast.tumors$sample))
+```
+
+Sebastian: I don't know how to handle the second column of `srbct$gene.name`.
+AL: There's actually no point in storing this dataset with one experiment in a MAE object.
+
+
+##  Multidrug
+
+### Construction
+
+```{r}
+data(multidrug)
+# Experiments
+X <- t(multidrug$ABC.trans)
+colnames(X) <- multidrug$cell.line$Sample
+Y <- t(multidrug$compound)
+colnames(Y) <- multidrug$cell.line$Sample
+rownames(Y) <- multidrug$comp.name
+
+# ColData
+info.sample <- DataFrame(multidrug$cell.line$Class)
+rownames(info.sample) <- colnames(X)
+
+multidrug.mae <- MultiAssayExperiment(
+  experiments = ExperimentList(list(ABC.trans=X, compound=Y)),
+  colData = info.sample)
+```
+
+### Usage
+
+```{r}
+multidrug.mae
+experiments(multidrug.mae)
+head(experiments(multidrug.mae)[[1]])
+head(experiments(multidrug.mae)[["ABC.trans"]])
+colData(multidrug.mae)
+sampleMap(multidrug.mae)
+```
+AL: There should be more than one omic to store as a MAE, otherwise SummarizedExperiment does the job:
+##  Breast Tumors
+
+### Construction
+
+```{r}
+data(breast.tumors)
+# Experiments
+X <- t(breast.tumors$gene.exp)
+colnames(X) <- breast.tumors$sample$name
+rownames(X) <- breast.tumors$genes$name
+breast.tumors.se <- SummarizedExperiment(assays = list(breast.tumors = X), rowData = DataFrame(breast.tumors$genes),
+                     colData = DataFrame(breast.tumors$sample))
+```
+
+
+### Usage
+
+```{r}
+breast.tumors.se
+assays(breast.tumors.se)
+colData(breast.tumors.se)
+breast.tumors.se$treatment
+breast.tumors.se@assays
+```
+
+## Linnerud
+
+### Construction
+
+```{r}
+data(linnerud)
+# Need to transpose matrices to be stored into experiments slot
+X <- t(linnerud$exercise)
+Y <- t(linnerud$physiological)
+colnames(X) <- colnames(Y) <- rownames(linnerud$exercise)
+# nothing to put in colData component
+
+linnerud.mae <- MultiAssayExperiment(experiments = ExperimentList(list(
+  exercise = X, physiological = Y
+))) 
+```
+
+
+# Generic functions and methods
+
+    1. First step:define a generic function with `name` and `def`
+
+    2. Define methods depending on the input with
+        - `f`: name of the generic function
+        - `signature`: whith which we recognize the input format
+        - `definition`: define the function te be performed depending on the signature
+
+## PCA
+
+### Functions
+
+```{r}
+setGeneric(name = "pca", def = function(X, Y=NULL, ...) standardGeneric("pca"))
+
+setMethod(f = "pca",
+          signature = signature("MultiAssayExperiment","character"),
+          definition = function(X, Y, ...) {
+                         tdm <- function(x) data.matrix(t(x))
+                         mixOmics::pca( tdm(experiments(X)[[Y]]), ... ) } )
+
+setMethod(f = "pca",
+          signature = "data.frame",
+          definition = function(X, Y=NULL, ...)  mixOmics::pca(X, ...) )
+
+showMethods(pca)
+```
+
+### Examples
+
+```{r fig.show='hide'}
+pca.res1 <- pca(nutrimouse$lipid)
+pca.res2 <- pca(nutrimouse.mae,"lipid")
+pca.res2 <- pca(nutrimouse.mae,"lipid",ncomp=5)
+
+plotIndiv(pca.res1)
+plotIndiv(pca.res2)
+
+# plotIndiv using colData
+plotIndiv(pca.res2, ind.names=FALSE, legend=TRUE,
+          group = colData(nutrimouse.mae)$diet,
+          pch = as.integer(colData(nutrimouse.mae)$genotype))
+```
+
+## SPCA
+
+### Functions
+
+```{r}
+setGeneric(name = "spca", def = function(X, Y=NULL,  ...) standardGeneric("spca"))
+
+setMethod(f = "spca",
+          signature = signature("MultiAssayExperiment", "character"),
+          definition = function(X, Y, ...) {
+                          tdm <- function(x) data.matrix(t(x))
+                          mixOmics::spca( tdm(experiments(X)[[Y]]), ...)
+          })
+
+setMethod(f = "spca", signature=signature("data.frame"),
+          definition = function(X, Y=NULL, ...) mixOmics::spca(X, ...))
+
+showMethods(spca)
+```
+
+### Examples
+
+```{r fig.show='hide'}
+spca.res1 <- spca(nutrimouse$gene, keepX=c(5,5)) # ? l'ancienne
+spca.res2 <- spca(nutrimouse.mae,"gene", keepX=c(5,5)) # with MAE and character
+
+plotIndiv(spca.res1)
+plotVar(spca.res1)
+plotIndiv(spca.res2)
+# plotIndiv using colData
+plotIndiv(spca.res2, ind.names=FALSE,  legend=TRUE,
+          group = colData(nutrimouse.mae)$diet,
+          pch = as.integer(colData(nutrimouse.mae)$genotype))
+plotVar(spca.res2)
+```
+
+
+I would like to add another method to allow call like that
+```{r eval=FALSE}
+spca.res3 <- spca(X=nutrimouse.mae,Y=gene, keepX=c(5,5))
+```
+
+to avoid " " and to be closer to the formula way, but I fail right now with something like this:
+
+```{r eval=FALSE}
+setMethod(f = "spca", signature = signature("MultiAssayExperiment", "name"),
+          definition = function(X, Y, ...) {
+                          expe <- as.character(substitute(Y))
+                          tdm <- function(x) data.matrix(t(x))
+                          mixOmics::spca( tdm(experiments(X)[[expe]]), ...) } )
+```
+
+This one functions but I can't reproduce the same in `setMethod`
+```{r eval=FALSE}
+spca.special <- function(X,Y,...)
+{
+  arguments <- as.list(match.call())
+  dset <- as.character(arguments$Y)
+  experiments(X)[[dset]]
+  }
+spca.special(nutrimouse.mae,gene)
+```
+
+`match.call` allows to grab arguments before anything else happens so that we can control how that happens (from <https://www.r-bloggers.com/passing-columns-of-a-dataframe-to-a-function-without-quotes>), but it doesn't function in `setMethod`...
+
+
+## IPCA
+
+### Functions
+
+```{r}
+setGeneric(name = "ipca", def = function(X, Y=NULL, ...) standardGeneric("ipca"))
+
+setMethod(f = "ipca",
+          signature = signature("MultiAssayExperiment","character"),
+          definition = function(X, Y, ...) {
+                         tdm <- function(x) data.matrix(t(x))
+                         mixOmics::ipca( tdm(experiments(X)[[Y]]), ... ) } )
+
+setMethod(f = "ipca",
+          signature = "data.frame",
+          definition = function(X, Y=NULL, ...)  mixOmics::ipca(X, ...) )
+
+showMethods(ipca)
+```
+
+### Examples
+
+```{r fig.show='hide'}
+ipca.res1 <- ipca(liver.toxicity$gene)
+ipca.res2 <- ipca(livertox.mae,"gene")
+ipca.res3 <- ipca(livertox.mae,"gene", ncomp=3, mode="deflation")
+
+plotIndiv(ipca.res1)
+plotIndiv(ipca.res2)
+plotIndiv(ipca.res3)
+
+# plotIndiv using colData
+plotIndiv(ipca.res2, ind.names=FALSE, legend=TRUE,
+          group = livertox.mae$Dose.Group)
+```
+
+## SIPCA
+
+### Functions
+
+```{r}
+setGeneric(name = "sipca", def = function(X, Y=NULL,  ...) standardGeneric("sipca"))
+
+setMethod(f = "sipca",
+          signature = signature("MultiAssayExperiment", "character"),
+          definition = function(X, Y, ...) {
+                          tdm <- function(x) data.matrix(t(x))
+                          mixOmics::sipca( tdm(experiments(X)[[Y]]), ...)
+          })
+
+setMethod(f = "sipca", signature=signature("data.frame"),
+          definition = function(X, Y=NULL, ...) mixOmics::sipca(X, ...))
+
+showMethods(sipca)
+```
+
+### Examples
+
+```{r fig.show='hide'}
+sipca.res1 <- sipca(liver.toxicity$gene, ncomp = 3,
+                    mode="deflation", keepX=c(10,10,10)) # ? l'ancienne
+sipca.res2 <- sipca(livertox.mae,"gene", ncomp = 3,
+                    mode="deflation", keepX=c(10,10,10)) # with MAE and character
+
+plotIndiv(sipca.res1)
+plotVar(sipca.res1)
+plotIndiv(sipca.res2)
+plotVar(sipca.res2)
+```
+
+
+## PLS-DA
+
+### Functions
+
+```{r}
+setGeneric(name = "plsda", def = function(X, Y, ...) standardGeneric("plsda"))
+
+setMethod(f = "plsda",
+          signature = signature("MultiAssayExperiment", "formula"), 
+          definition = function(X, Y, ...) {
+            els <- vapply(as.list(Y), as.character, "character")[-1]
+            tdm <- function(x) data.matrix(t(x))
+            ans <- mixOmics::plsda(tdm(experiments(X)[[els[2]]]),
+                                   colData(X)[[els[1]]], ...) } )
+
+setMethod(f = "plsda", signature=signature("data.frame", "factor"),
+          definition = function(X, Y, ...) mixOmics::plsda(X, Y, ...))
+
+showMethods(plsda)
+```
+
+### Examples
+
+```{r fig.show='hide'}
+plsda.res1 <- plsda(nutrimouse$gene,nutrimouse$diet)
+plsda.res2 <- plsda(nutrimouse.mae,diet~gene)
+plsda.res3 <- plsda(nutrimouse.mae,genotype~lipid)
+
+plotIndiv(plsda.res1,legend=TRUE)
+plotIndiv(plsda.res2,legend=TRUE)
+plotIndiv(plsda.res3,legend=TRUE)
+```
+
+## SPLS-DA
+
+### Functions
+
+```{r}
+setGeneric(name = "splsda", def = function(X, Y, ...) standardGeneric("splsda"))
+
+setMethod(f = "splsda",
+          signature = signature("MultiAssayExperiment", "formula"), 
+          definition = function(X, Y, ...) {
+            els <- vapply(as.list(Y), as.character, "character")[-1]
+            tdm <- function(x) data.matrix(t(x))
+            ans <- mixOmics::splsda(tdm(experiments(X)[[els[2]]]),
+                                   colData(X)[[els[1]]], ...) } )
+
+setMethod(f = "splsda", signature=signature("data.frame", "factor"),
+          definition = function(X, Y, ...) mixOmics::splsda(X, Y, ...))
+
+showMethods(splsda)
+```
+
+### Examples
+
+```{r fig.show='hide'}
+splsda.res1 <- splsda(nutrimouse$gene,nutrimouse$diet, ncomp=3, keepX=c(10,10,10))
+splsda.res2 <- splsda(nutrimouse.mae,diet~gene, ncomp=3, keepX=c(10,10,10))
+splsda.res3 <- splsda(nutrimouse.mae,genotype~lipid, ncomp=2, keepX=c(5,5))
+
+plotIndiv(splsda.res1,legend=TRUE)
+plotIndiv(splsda.res2,legend=TRUE)
+plotIndiv(splsda.res3,legend=TRUE)
+
+plotVar(splsda.res2)
+plotVar(splsda.res3)
+```
+
+## PLS
+
+### Functions
+
+
+```{r}
+setGeneric("pls", function(X, Y, ...) standardGeneric("pls"))
+
+# MAE + formula => mode regression
+setMethod("pls", c("MultiAssayExperiment", "formula"), 
+          function(X, Y, ...) {
+            message("*** MAE + formula: regression mode ***")
+            els <- vapply(as.list(Y), as.character, "character")[-1]
+            tdm <- function(x) data.matrix(t(x))
+            mixOmics::pls( tdm(experiments(X)[[els[1]]]),
+                           tdm(experiments(X)[[els[2]]]), mode="regression", ...)
+                      })
+
+# MAE + vector(character + character) => mode canonical
+setMethod("pls", c("MultiAssayExperiment", "vector"), 
+          function(X, Y, ...) {
+            message("*** MAE + 2-vector of characters ***")
+            tdm <- function(x) data.matrix(t(x))
+            mixOmics::pls( tdm(experiments(X)[[Y[1]]]),
+                           tdm(experiments(X)[[Y[2]]]), ...)
+                      })
+
+# A l'ancienne : 2 data.frame
+setMethod("pls", c("data.frame", "data.frame"), function(X, Y, ...) {
+  message("*** Two data.frames ***")
+  mixOmics::pls(X, Y, ...)
+})
+
+showMethods(pls)
+```
+
+### Examples
+
+
+```{r fig.show='hide'}
+pls.res1 <- pls(liver.toxicity$gene,liver.toxicity$clinic)
+pls.res2 <- pls(livertox.mae,clinic~gene)
+pls.res3 <- pls(livertox.mae,c("gene","clinic"))
+
+plotIndiv(pls.res1,rep.space="XY-variate")
+plotIndiv(pls.res2,rep.space="XY-variate")
+plotIndiv(pls.res3,rep.space="XY-variate")
+
+plotVar(pls.res1)
+plotVar(pls.res2)
+plotVar(pls.res3)
+```
+
+## SPLS
+
+### Functions
+
+
+```{r}
+setGeneric("spls", function(X, Y, ...) standardGeneric("spls"))
+
+# MAE + formula => mode regression
+setMethod("spls", c("MultiAssayExperiment", "formula"), 
+          function(X, Y, ...) {
+            message("*** MAE + formula: regression mode ***")
+            els <- vapply(as.list(Y), as.character, "character")[-1]
+            tdm <- function(x) data.matrix(t(x))
+            mixOmics::spls( tdm(experiments(X)[[els[1]]]),
+                           tdm(experiments(X)[[els[2]]]), mode="regression", ...)
+                      })
+
+# MAE + vector(character + character) => mode canonical
+setMethod("spls", c("MultiAssayExperiment", "vector"), 
+          function(X, Y, ...) {
+            message("*** MAE + 2-vector of characters ***")
+            tdm <- function(x) data.matrix(t(x))
+            mixOmics::spls( tdm(experiments(X)[[Y[1]]]),
+                           tdm(experiments(X)[[Y[2]]]), ...)
+                      })
+
+# A l'ancienne : 2 data.frame
+setMethod("spls", c("data.frame", "data.frame"), function(X, Y, ...) {
+  message("*** Two data.frames ***")
+  mixOmics::spls(X, Y, ...)
+})
+
+showMethods(spls)
+```
+
+### Examples
+
+
+```{r fig.show='hide'}
+spls.res1 <- spls(liver.toxicity$gene,liver.toxicity$clinic, keepX=c(10,10), keepY=c(5,5))
+spls.res2 <- spls(livertox.mae,clinic~gene, keepX=c(5,5), keepY=c(10,10))
+spls.res3 <- spls(livertox.mae,c("gene","clinic"), keepX=c(15,15), keepY=c(5,5))
+
+plotIndiv(spls.res1,rep.space="XY-variate")
+plotIndiv(spls.res2,rep.space="XY-variate")
+plotIndiv(spls.res3,rep.space="XY-variate")
+
+plotVar(spls.res1)
+plotVar(spls.res2)
+plotVar(spls.res3)
+```
+
+
+
+## RCC
+
+
+```{r}
+setGeneric("rcc", function(X, Y, ...) standardGeneric("rcc"))
+
+# MAE + vector(character + character) => mode canonical
+setMethod("rcc", c("MultiAssayExperiment", "vector"), 
+          function(X, Y, ...) {
+            message("*** MAE + 2-vector of characters ***")
+            tdm <- function(x) data.matrix(t(x))
+            mixOmics::rcc( tdm(experiments(X)[[Y[1]]]),
+                           tdm(experiments(X)[[Y[2]]]), ...)
+                      })
+
+# A l'ancienne : 2 data.frame
+setMethod("rcc", c("data.frame", "data.frame"), function(X, Y, ...) {
+  message("*** Two data.frames ***")
+  mixOmics::rcc(X, Y, ...)
+})
+
+# No formula with MAE because it could be misleading
+
+showMethods(rcc)
+```
+
+### Examples
+
+
+```{r fig.show='hide'}
+# Without regularization: linneud data set
+rcc.res1 <- rcc(linnerud$exercise,linnerud$physiological)
+rcc.res2 <- rcc(linnerud.mae,c("exercise","physiological"))
+
+plotIndiv(rcc.res1,rep.space="XY-variate")
+plotIndiv(rcc.res2,rep.space="XY-variate")
+
+plotVar(rcc.res1)
+plotVar(rcc.res2)
+
+# With regularization: nutrimouse data set
+rcc.res3 <- rcc(nutrimouse$gene,nutrimouse$lipid, ncomp=3,
+                lambda1 = 0.064, lambda2 = 0.008)
+rcc.res4 <- rcc(nutrimouse.mae,c("gene","lipid"), ncomp=3,
+                lambda1 = 0.064, lambda2 = 0.008)
+
+plotIndiv(rcc.res3,rep.space="XY-variate")
+plotIndiv(rcc.res4,rep.space="XY-variate")
+
+plotVar(rcc.res3)
+plotVar(rcc.res4)
+```
+
+
+
+## DIABLO
+
+### Functions
+
+### Examples
+
