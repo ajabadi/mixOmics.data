@@ -7,5 +7,5 @@ The data descriptions can be found in _/man_ older.
 ## Installation:
 
 ```
-devtools::install_github("ajabadi/mixOmics.data")
+devtools::install_github("mixOmicsTeam/mixOmicsData")
 ```
