@@ -1,6 +1,6 @@
-Package: mixOmics.data
 Depends: mixOmics
 Imports: MultiAssayExperiment, SummarizedExperiment
+Package: mixOmicsData
 Type: Package
 Title: mixOmics examplar datasets
 Version: 6.9.2
