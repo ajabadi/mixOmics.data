@@ -4,7 +4,9 @@ Type: Package
 Title: mixOmics Package Datasets
 Version: 6.9.2
 Suggests: knitr, rmarkdown
-Author: Al J Abadi, Kim-Anh Lê Cao, Florian Rohart
+Authors@R: c(person("Kim-Anh", "Le Cao", role = c("aut", "cre"), email = "kimanh.lecao@unimelb.edu.au"), 
+      person("Florian", "Rohart", role = "aut"), 
+      person("Al", "J Abadi", role = "ctb"))
 Maintainer: Al J Abadi <al.jal.abadi@gmail.com>
 URL: http://www.mixOmics.org
 Description: mixOmics exemplar datasets.
