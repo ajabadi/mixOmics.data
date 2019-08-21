@@ -55,7 +55,7 @@ identical(rownames(liver.toxicity$gene), rownames(liver.toxicity$treatment))
 
 ## ----------- MultiAssayExperiment -----------
 ## load package before continuing CMD + SHIFT + L
-# data(nutrimouse)
+data(liver.toxicity)
 stopifnot(all(grepl('ID', rownames(liver.toxicity$gene))))
 stopifnot(all(grepl('ID', rownames(liver.toxicity$clinic))))
 stopifnot(all(grepl('ID', rownames(liver.toxicity$treatment))))
@@ -145,6 +145,7 @@ linnerud.mae <- MultiAssayExperiment(experiments = ExperimentList(list(
   exercise = X, physiological = Y
 )))
 
+# save(linnerud.mae, file = 'data/linnerud.mae.rda')
 ########################### multidrug ###########################
 ## this one is a tough one so just letting it go as is
 ## ----------- List -----------
