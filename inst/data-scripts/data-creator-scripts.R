@@ -61,7 +61,7 @@ stopifnot(all(grepl('ID', rownames(liver.toxicity$clinic))))
 stopifnot(all(grepl('ID', rownames(liver.toxicity$treatment))))
 
 # information biological units for colData component
-info.sample <- DataFrame(treatment = liver.toxicity$treatment)
+info.sample <- DataFrame(liver.toxicity$treatment)
 liver.toxicity.mae <- MultiAssayExperiment(
   experiments = ExperimentList(list(gene = t(liver.toxicity$gene),
                                     clinic = t(liver.toxicity$clinic))),
