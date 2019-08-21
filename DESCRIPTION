@@ -1,18 +1,17 @@
-Depends: mixOmics
-Imports: MultiAssayExperiment, SummarizedExperiment
 Package: mixOmicsData
+Imports: MultiAssayExperiment
 Type: Package
-Title: mixOmics examplar datasets
+Title: mixOmics Package Datasets
 Version: 6.9.2
 Suggests: knitr, rmarkdown
 Author: Al J Abadi, Kim-Anh Lê Cao, Florian Rohart
 Maintainer: Al J Abadi <al.jal.abadi@gmail.com>
 URL: http://www.mixOmics.org
-Description: mixOmics examplar datasets.
+Description: mixOmics exemplar datasets.
 License: GPL (>=2.0)
 BugReports: https://github.com/mixOmicsTeam/mixOmics/issues/
 Repository: Bioconductor
 Encoding: UTF-8
 biocViews: ImmunoOncologyData
-LazyData: true
+LazyData: false
 RoxygenNote: 6.1.1
