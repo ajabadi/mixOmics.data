@@ -1,7 +1,7 @@
 Koren.16S
 breast.TCGA
 breast.tumors
-breast.tumors.mae
+breast.tumors.se
 diverse.16S
 linnerud
 linnerud.mae
@@ -12,7 +12,7 @@ multidrug.mae
 nutrimouse
 nutrimouse.mae
 srbct
-srbct.mae
+srbct.se
 stemcells
 vac18
 vac18.simulated
