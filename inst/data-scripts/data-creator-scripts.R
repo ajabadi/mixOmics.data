@@ -152,8 +152,35 @@ linnerud.mae <- MultiAssayExperiment(experiments = ExperimentList(list(
 ## ---- adding ID to old sample names
 library(mixOmics)
 data(multidrug)
+
+## fix rownames
+rownames(multidrug$ABC.trans)
+rownames(multidrug$compound)
+rownames(multidrug$ABC.trans) <-
+  rownames(multidrug$compound) <-
+  paste0("ID",1:60)
+
+## fix colnames
+colnames(multidrug$ABC.trans)
+colnames(multidrug$compound)
+
+if ( !all(grepl('ID', colnames(multidrug$compound))) ) {
+  colnames(multidrug$compound) <- paste0("cmp_",colnames(multidrug$compound))
+}
+
+## there are missing compound names
 multidrug$comp.name %>% as.character() %>% duplicated() %>% sum()
 ### ----------- MultiAssayExperiment -----------
+multidrug.mae <- MultiAssayExperiment()
+multidrug.mae@metadata <- list(
+  title = "Multidrug Resistance Data",
+  description = list(
+    ABC.trans = "The expression of the 48 human ABC transporters.",
+
+  ),
+  source = "http://discover.nci.nih.gov/datasetsNature2000.jsp"
+)
+multidrug$ABC.trans
 data(multidrug)
 # Experiments
 X <- t(multidrug$ABC.trans)

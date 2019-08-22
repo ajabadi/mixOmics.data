@@ -1,0 +1,119 @@
+---
+title: "multidrug"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Multi-Drug Resistance Data
+
+source:https://discover.nci.nih.gov/nature2000/natureintromain.jsp
+
+## Drug activity data
+
+Copy the url to the "gz format" of drug activity data and read the data:
+
+```{r}
+url_da <- "https://discover.nci.nih.gov/nature2000/data/Archives/a_matrix1400.txt.gz"
+multidrug_compound_raw <- data.table::fread(url_da, header = TRUE)
+```
+
+From description, the columns are:
+
+**Drug activity data (A-matrix).**
+Tab delimited (1400 drugs x 60 cells) Used to generate dendrogram in Figure 2b
+Columns named in Excel format.
+  A:	NSC number (i.e. a unique drug identifier)
+  B:	Drug name, if known. Else, the NSC number.
+  C:	Mechanism of action, if known.
+  D-BK:	Drug activities (-Log10 Gi50)..
+
+Therefore, we will save it as an assay with A:C as `rowData`:
+
+```{r}
+multidrug_compound_raw[,-1:-3] %>% class()
+```
+
+```{r}
+library(data.table)
+library(SummarizedExperiment)
+## drop the 2nd and 3rd column and keep the first one as rownames
+cmp <- multidrug_compound_raw[,-2:-3] %>% data.frame(row.names = 1) %>% as.matrix()
+rowdata <- multidrug_compound_raw[,2:3] %>%  DataFrame()
+compound <- SummarizedExperiment(assays = list(compound = cmp), rowData = rowdata,
+                                 colData = list(Tissue2 = factor(substring(colnames(cmp), 0, 2))))
+```
+
+
+
+## Gene expression data
+
+Expression of 1375 genes ( a bigger dataset is also available):
+
+```{r}
+url_ge <- "https://discover.nci.nih.gov/nature2000/data/Archives/t_matrix1375.txt.gz"
+multidrug_exp_raw <- data.table::fread(url_ge, header = TRUE)
+```
+
+Description: 
+
+**Gene expression data description (selected genes, 1375)**
+Tab delimited (1375 genes x 60 cells). Columns named in Excel format.
+  A:	IMAGE Clone ID
+  B:	Gene description.
+  C:	5ACC: 5' GenBank accession number.
+  D:	3ACC: 3' GenBank accession number.
+  E-BL:	Gene expression levels expressed as Log2(ratio), where ratio = the red/green fluorescence ration after computational balancing of the two channels.
+
+We will drop A, C, D:
+```{r}
+expression <- multidrug_exp_raw[,-c(1,3:4)] %>% data.frame(row.names = 1) %>% as.matrix()
+expression <- SummarizedExperiment(assays = list(expression = expression ), 
+                                   colData = list(Tissue = factor(substring(colnames(expression), 0, 2))))
+```
+
+## ABC genes
+
+ABC transport genes from https://discover.nci.nih.gov/abc/2004_cancercell_abstract.jsp#supplement:
+
+Copy the link to the txt file of Supplemental Table S1
+```{r}
+url_abc <- "https://discover.nci.nih.gov/abc/2004_cancercell_TableS1.txt"
+multidrug_abc_raw <- data.table::fread(url_abc, header = TRUE)
+multidrug_abc <- multidrug_abc_raw %>% data.frame(row.names = 1) %>% as.matrix()
+```
+
+The rownames are gene names and colnames include sample names and phenotypes, but do not match mixOmics' multidrug sample names.
+Leaving it at this point for now.
+
+The column names are not necessarily in the same order so I'm wondering if every assay has its
+## MultiAssayExperiment
+
+```{r}
+testthat::expect_identical(colnames(expression), colnames(compound))
+colnames(expression) %in% colnames(compound)
+colnames(compound) %in% colnames(expression)
+sapply(identical(colnames(expression), colnames(multidrug_abc)), FUN = identical, colnames(compound))
+```
+
+```{r}
+exps <- ExperimentList(list(Expression = expression, Compound = compound, ABC.trans = multidrug_abc))
+multimae <- MultiAssayExperiment(experiments = exps)
+```
+
+The colData from SE assays are not automatically included in MAE.
+
+For now I'll proceed with the tidy liver toxicity for pkg enhancement because
+I really need to get something done!
+
+What we have to do:
+
+  * see how order of samples in individual assays affect colData order?
+  * remove redundanct colData in liver.toxicity (Treatment.Group and Dose.Group)
+  * Get a better sense of MultiAssayExperiment ecosystem and how it can be leveraged
+  using its getters
+  * Create a better dataset with colData and rowData and multiple omics]
+  * Possibly also include a SingleCell MAE
+  * Make data creation procedure fully transparent and reproducible.
