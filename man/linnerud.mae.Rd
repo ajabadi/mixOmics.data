@@ -4,10 +4,13 @@
 \name{linnerud.mae}
 \alias{linnerud.mae}
 \title{Linnerud Dataset}
-\format{A list containing the following components: \describe{
-\item{list("exercise")}{data frame with 20 observations on 3 exercise
-variables.} \item{list("physiological")}{data frame with 20 observations on
-3 physiological variables.} }}
+\format{A \code{MultiAssayExperiment} class containing the following
+components: \describe{
+\item{assay: exercise)}{matrix with 20 observations on 3 exercise
+variables.}
+\item{assay: physiological)}{data frame with 20 observations on
+3 physiological variables.}
+}}
 \source{
 Tenenhaus, M. (1998), Table 1, page 15.
 }

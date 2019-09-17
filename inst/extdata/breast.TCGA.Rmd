@@ -1,0 +1,30 @@
+---
+title: "multidrug"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# breast.TCGA
+
+```{r}
+breast.TCGA.full <- list()
+data("breast.TCGA")
+## there is 3 datasets in train and 2 in test! - so we skip protein
+for (i in 1:2){
+  assay <- names(breast.TCGA$data.train)[i]
+  breast.TCGA.full[[assay]] <- rbind(breast.TCGA$data.train[[i]], breast.TCGA$data.test[[i]])
+}
+breast.TCGA.full$protein <- breast.TCGA$data.train$protein
+sapply(breast.TCGA$data.train, dim)
+subtype <- c(breast.TCGA$data.train$subtype, breast.TCGA$data.test$subtype)
+
+exps <- lapply(breast.TCGA$data.train[1:3], t) ## transpose
+coldata <- DataFrame(subtype=breast.TCGA$data.train$subtype, 
+                     row.names = rownames(breast.TCGA$data.train$mirna))
+breast.TCGA.mae <- MultiAssayExperiment(experiments = ExperimentList(exps), colData = coldata)
+save(breast.TCGA.mae, file = "../../data/breast.TCGA.mae.rda")
+```
+

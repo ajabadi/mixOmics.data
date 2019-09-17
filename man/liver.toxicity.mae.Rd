@@ -4,6 +4,18 @@
 \name{liver.toxicity.mae}
 \alias{liver.toxicity.mae}
 \title{Liver Toxicity Data}
+\format{A \code{MultiAssayExperiment} class
+containing the following components: \describe{
+\item{assay: gene}{data frame with 64 rows and 3116 columns. The expression
+measure of 3116 genes for the 64 subjects (rats).}
+\item{list("clinic")}{data frame with 64 rows and 10 columns, containing 10
+clinical variables for the same 64 subjects.} \item{list("treatment")}{data
+frame with 64 rows and 4 columns, containing the treatment information on
+the 64 subjects, such as doses of acetaminophen and times of necropsies.}
+\item{list("gene.ID")}{data frame with 3116 rows and 2 columns, containing
+geneBank IDs and gene titles of the annotated genes}
+
+}}
 \source{
 The two liver toxicity data sets are a companion resource for the
 paper of Bushel \emph{et al.} (2007), and was downloaded from:
